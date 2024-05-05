@@ -1,8 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { siteConfig } from "./config/site";
-import { AtSign } from "lucide-react";
+import { ReactNode } from "react";
+import { siteConfig } from "../config/site";
 
-export default function Page() {
+export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center">
       <div className="space-y-4 w-[400px]">
@@ -15,10 +14,7 @@ export default function Page() {
           </small>
         </div>
 
-        <Button variant="outline" className="w-full text-base">
-          <AtSign className="size-4 mr-2" />
-          Entrar com Google
-        </Button>
+        <div>{children}</div>
       </div>
     </div>
   );
