@@ -15,7 +15,7 @@ export function SignOutButton() {
   }
 
   return (
-    <Button variant="outline" type="submit" onClick={handleSignOut}>
+    <Button variant="link" type="submit" onClick={handleSignOut}>
       <LogOut className="size-3 mr-2" />
       Sair
     </Button>

@@ -16,7 +16,11 @@ export default async function Page() {
   }
 
   return (
-    <form className="space-y-4">
+    <form action={signUp} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Nome</Label>
+        <Input id="name" name="name" placeholder="Ruan Gustavo" required />
+      </div>
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -37,7 +41,6 @@ export default async function Page() {
           required
         />
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirme sua senha</Label>
         <Input
@@ -57,7 +60,7 @@ export default async function Page() {
         >
           Já tenho uma conta
         </Link>
-        <Button formAction={signUp}>Criar conta</Button>
+        <Button type="submit">Criar conta</Button>
       </div>
     </form>
   );
