@@ -2,18 +2,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createExerciseRecord } from "../actions/create-exercise-record";
 import { ArrowRight } from "lucide-react";
-import { MutableRefObject, useRef } from "react";
-import { useFormState } from "react-dom";
 
 type ExerciseRecordsProps = {
   sets: number;
+  exerciseId: string;
+  workoutId: string;
   onExerciseRecorded: () => void;
 };
 
 export function ExerciseRecords({
   sets,
+  exerciseId,
+  workoutId,
   onExerciseRecorded,
 }: ExerciseRecordsProps) {
+  // TODO: use useFormState hook
+
   const padStartNumber = (number: number) => {
     return number.toString().padStart(2, "0");
   };
@@ -34,7 +38,10 @@ export function ExerciseRecords({
         onSubmit={onExerciseRecorded}
         className="space-y-2"
       >
-        <input type="hidden" name="exerciseId" value="1" />
+        {/* NOTE: is this best practice? how to send 'metadatas' to the server? */}
+        <input type="hidden" name="sets" value={sets} />
+        <input type="hidden" name="exerciseId" value={exerciseId} />
+        <input type="hidden" name="workoutId" value={workoutId} />
 
         {Array(sets)
           .fill(null)

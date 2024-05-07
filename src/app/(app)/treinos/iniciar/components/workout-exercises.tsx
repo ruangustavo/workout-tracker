@@ -5,6 +5,7 @@ import { ExerciseRecords } from "./exercise-records";
 import { Button } from "@/components/ui/button";
 
 type WorkoutExercisesProps = {
+  workoutId: string;
   exercises: {
     sets: number | null;
     min_reps: number | null;
@@ -16,7 +17,10 @@ type WorkoutExercisesProps = {
   }[];
 };
 
-export function WorkoutExercises({ exercises }: WorkoutExercisesProps) {
+export function WorkoutExercises({
+  workoutId,
+  exercises,
+}: WorkoutExercisesProps) {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
 
   function nextExercise() {
@@ -45,9 +49,11 @@ export function WorkoutExercises({ exercises }: WorkoutExercisesProps) {
     <>
       <div className="grow space-y-4">
         <h1 className="uppercase font-semibold">{exercise?.name}</h1>
-        {sets && (
+        {sets && exercise && (
           <ExerciseRecords
             sets={sets}
+            workoutId={workoutId}
+            exerciseId={exercise.id}
             onExerciseRecorded={handleExerciseRecorded}
           />
         )}

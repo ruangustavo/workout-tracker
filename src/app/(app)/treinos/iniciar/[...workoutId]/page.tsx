@@ -16,7 +16,10 @@ export default async function Page({
   return (
     <div className="flex flex-col h-full">
       {workoutsExercisesQuery.data && (
-        <WorkoutExercises exercises={workoutsExercisesQuery.data} />
+        <WorkoutExercises
+          workoutId={params.workoutId}
+          exercises={workoutsExercisesQuery.data}
+        />
       )}
     </div>
   );
