@@ -69,46 +69,10 @@ const PRESET_EXERCISES: { name: string; muscleGroup: string }[] = [
 
 export const run = internalMutation({
 	args: {
-		email: v.string(),
-		name: v.string(),
-		hashedPassword: v.string(),
+		userId: v.id("users"),
 	},
 	handler: async (ctx, args) => {
-		let userId: Id<"users">;
-		const existingUser = await ctx.db
-			.query("users")
-			.filter((q) => q.eq(q.field("email"), args.email))
-			.first();
-
-		if (existingUser) {
-			userId = existingUser._id;
-		} else {
-			userId = await ctx.db.insert("users", {
-				email: args.email,
-				name: args.name,
-			});
-		}
-
-		const existingPasswordAccount = await ctx.db
-			.query("authAccounts")
-			.withIndex("providerAndAccountId", (q) =>
-				q.eq("provider", "password").eq("providerAccountId", args.email),
-			)
-			.first();
-
-		if (existingPasswordAccount) {
-			await ctx.db.patch(existingPasswordAccount._id, {
-				userId,
-				secret: args.hashedPassword,
-			});
-		} else {
-			await ctx.db.insert("authAccounts", {
-				userId,
-				provider: "password",
-				providerAccountId: args.email,
-				secret: args.hashedPassword,
-			});
-		}
+		const { userId } = args;
 
 		const existingExercises = await ctx.db.query("exercises").collect();
 		const existingNames = new Set(existingExercises.map((e) => e.name));
