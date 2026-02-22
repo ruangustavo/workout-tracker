@@ -8,6 +8,7 @@ import { ActivityHeatmap, heatmapRange } from "@/components/activity-heatmap";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/convex/_generated/api";
+import type { Doc } from "@/convex/_generated/dataModel";
 
 const { from: rangeFrom, to: rangeTo } = heatmapRange();
 
@@ -22,7 +23,7 @@ export function MetricsSection() {
 		const sessions = rangeSessions ?? [];
 
 		const trained = new Set(
-			sessions.map((s) => format(startOfDay(new Date(s.startedAt)), "yyyy-MM-dd")),
+			sessions.map((s: Doc<"sessions">) => format(startOfDay(new Date(s.startedAt)), "yyyy-MM-dd")),
 		);
 
 		let cursor = today;
@@ -36,7 +37,7 @@ export function MetricsSection() {
 			temp = subDays(temp, 1);
 		}
 
-		const monthCount = sessions.filter((s) =>
+		const monthCount = sessions.filter((s: Doc<"sessions">) =>
 			isSameMonth(new Date(s.startedAt), today),
 		).length;
 

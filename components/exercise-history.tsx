@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { format } from "date-fns";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import {
 	Table,
 	TableBody,
@@ -46,13 +46,13 @@ export function ExerciseHistory({ exerciseId }: ExerciseHistoryProps) {
 				</TableRow>
 			</TableHeader>
 			<TableBody>
-				{history.map((entry) => {
+				{history.map((entry: Doc<"exerciseLogs"> & { startedAt: number; workoutName: string }) => {
 					const maxWeight = Math.max(
-						...entry.sets.map((s) => s.weight),
+						...entry.sets.map((s: { number: number; weight: number; reps: number }) => s.weight),
 						0,
 					);
 					const totalReps = entry.sets.reduce(
-						(sum, s) => sum + s.reps,
+						(sum: number, s: { number: number; weight: number; reps: number }) => sum + s.reps,
 						0,
 					);
 					return (

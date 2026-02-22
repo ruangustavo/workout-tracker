@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { DAY_LABELS, DAYS_OF_WEEK, type DayOfWeek } from "@/lib/constants";
 
 function getTodayDayOfWeek(): DayOfWeek {
@@ -49,7 +49,7 @@ export function WorkoutSection() {
 		const day = getTodayDayOfWeek();
 		const workoutId = activeProgram.schedule[day];
 		if (!workoutId) return null;
-		const workout = activeProgram.workouts.find((w) => w._id === workoutId);
+		const workout = activeProgram.workouts.find((w: Doc<"workouts">) => w._id === workoutId);
 		return workout ? { ...workout, dayLabel: DAY_LABELS[day] } : null;
 	}, [activeProgram]);
 
@@ -157,8 +157,8 @@ export function WorkoutSection() {
 					</DialogHeader>
 					<div className="space-y-2 pb-2">
 						{activeProgram?.workouts
-							.filter((w) => w._id !== todayWorkout?._id)
-							.map((workout) => (
+							.filter((w: Doc<"workouts">) => w._id !== todayWorkout?._id)
+							.map((workout: Doc<"workouts">) => (
 								<Button
 									key={workout._id}
 									variant="outline"

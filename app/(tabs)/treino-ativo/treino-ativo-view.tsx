@@ -42,8 +42,10 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+
+type LogWithDetails = Doc<"exerciseLogs"> & { exerciseDetails: Doc<"exercises"> | null };
 
 export function TreinoAtivoView() {
 	const router = useRouter();
@@ -61,7 +63,7 @@ export function TreinoAtivoView() {
 
 	useEffect(() => {
 		if (logs && logs.length > 0 && currentLogId === null) {
-			const firstPending = logs.find((l) => l.status === "pending");
+			const firstPending = logs.find((l: LogWithDetails) => l.status === "pending");
 			setCurrentLogId(firstPending?._id ?? logs[0]._id);
 		}
 	}, [logs, currentLogId]);
@@ -100,12 +102,12 @@ export function TreinoAtivoView() {
 		);
 	}
 
-	const currentIndex = logs.findIndex((l) => l._id === currentLogId);
+	const currentIndex = logs.findIndex((l: LogWithDetails) => l._id === currentLogId);
 	const currentLog = currentIndex >= 0 ? logs[currentIndex] : null;
 	const completedCount = logs.filter(
-		(l) => l.status === "completed" || l.status === "skipped",
+		(l: LogWithDetails) => l.status === "completed" || l.status === "skipped",
 	).length;
-	const allDone = logs.every((l) => l.status !== "pending");
+	const allDone = logs.every((l: LogWithDetails) => l.status !== "pending");
 	const workoutExercises = session.workout.exercises;
 
 	const handlePrev = () => {
@@ -129,7 +131,7 @@ export function TreinoAtivoView() {
 	const handleFinish = async () => {
 		await completeSession({ id: session._id });
 		toast.success("Treino concluído!", {
-			description: session.workout.name,
+			description: session.workout?.name,
 		});
 		router.push("/inicio");
 	};
@@ -155,11 +157,9 @@ export function TreinoAtivoView() {
 						<ListOrdered className="size-4" />
 					</Button>
 					<AlertDialog>
-						<AlertDialogTrigger asChild>
-							<Button variant="outline" size="sm">
-								<CheckCircle className="size-4" />
-								Finalizar
-							</Button>
+						<AlertDialogTrigger render={<Button variant="outline" size="sm" />}>
+							<CheckCircle className="size-4" />
+							Finalizar
 						</AlertDialogTrigger>
 						<AlertDialogContent>
 							<AlertDialogHeader>
@@ -195,7 +195,7 @@ export function TreinoAtivoView() {
 					exerciseName={currentLog.exerciseDetails?.name ?? "Exercício"}
 					config={
 						workoutExercises.find(
-							(e) => e.exercise === currentLog.exercise,
+							(e: Doc<"workouts">["exercises"][number]) => e.exercise === currentLog.exercise,
 						) ?? {
 							exercise: currentLog.exercise,
 							sets: 3,
@@ -245,7 +245,7 @@ export function TreinoAtivoView() {
 						<SheetTitle>Exercícios</SheetTitle>
 					</SheetHeader>
 					<div className="space-y-1 overflow-y-auto px-4 pb-6">
-						{logs.map((log) => (
+						{logs.map((log: LogWithDetails) => (
 							<button
 								key={log._id}
 								type="button"

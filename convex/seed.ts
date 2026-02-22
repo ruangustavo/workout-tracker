@@ -7,7 +7,7 @@ export const seed = mutation({
 		userId: v.id("users"),
 	},
 	handler: async (ctx, args) => {
-		return await ctx.runMutation(internal.seedData.run, {
+		await ctx.runMutation(internal.seedData.run, {
 			userId: args.userId,
 		});
 	},

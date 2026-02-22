@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 
 interface ExercisePickerProps {
 	open: boolean;
@@ -35,18 +35,18 @@ export function ExercisePicker({
 	const filtered = useMemo(() => {
 		if (!exercises) return [];
 		const excludeSet = new Set(excludeIds);
-		let result = exercises.filter((e) => !excludeSet.has(e._id));
+		let result = exercises.filter((e: Doc<"exercises">) => !excludeSet.has(e._id));
 
 		if (search.trim()) {
 			const term = search.toLowerCase();
 			result = result.filter(
-				(e) =>
+				(e: Doc<"exercises">) =>
 					e.name.toLowerCase().includes(term) ||
 					e.muscleGroup.toLowerCase().includes(term),
 			);
 		}
 
-		return result.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+		return result.sort((a: Doc<"exercises">, b: Doc<"exercises">) => a.name.localeCompare(b.name, "pt-BR"));
 	}, [exercises, search, excludeIds]);
 
 	const grouped = useMemo(() => {
@@ -99,7 +99,7 @@ export function ExercisePicker({
 									<h3 className="font-mono text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
 										{group}
 									</h3>
-									{exercises.map((exercise) => (
+									{exercises.map((exercise: Doc<"exercises">) => (
 										<button
 											key={exercise._id}
 											type="button"

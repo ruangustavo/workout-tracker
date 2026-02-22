@@ -41,7 +41,7 @@ export function ExerciseProgress({ exerciseId }: ExerciseProgressProps) {
 		);
 	}
 
-	const chartData = data.map((d) => ({
+	const chartData = data.map((d: { date: number; volume: number; maxWeight: number }) => ({
 		date: format(new Date(d.date), "dd/MM"),
 		volume: d.volume,
 	}));

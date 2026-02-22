@@ -28,7 +28,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { WorkoutExerciseData } from "@/components/workout-exercise-form";
 import { WorkoutForm } from "@/components/workout-form";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
+
+type EnrichedExercise = Doc<"workouts">["exercises"][number] & { exerciseName: string };
+type EnrichedWorkout = Omit<Doc<"workouts">, "exercises"> & { exercises: EnrichedExercise[] };
 
 export function ProgramDetailClient({
 	programId,
@@ -118,7 +121,7 @@ export function ProgramDetailClient({
 	}
 
 	function handleEditWorkout(workout: NonNullable<typeof workouts>[number]) {
-		const exerciseData: WorkoutExerciseData[] = workout.exercises.map((e) => ({
+		const exerciseData: WorkoutExerciseData[] = workout.exercises.map((e: EnrichedExercise) => ({
 			exerciseId: e.exercise,
 			exerciseName: e.exerciseName,
 			sets: e.sets,
@@ -218,7 +221,7 @@ export function ProgramDetailClient({
 					</p>
 				) : (
 					<div className="space-y-2">
-						{workouts.map((workout) => (
+						{workouts.map((workout: EnrichedWorkout) => (
 							<Card key={workout._id} size="sm">
 								<CardHeader>
 									<CardTitle>{workout.name}</CardTitle>

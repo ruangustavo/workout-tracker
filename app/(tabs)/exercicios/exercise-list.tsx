@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/input-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 
 export function ExerciseList() {
@@ -34,7 +34,7 @@ export function ExerciseList() {
 
 		const term = search.toLowerCase();
 		return exercises.filter(
-			(e) =>
+			(e: Doc<"exercises">) =>
 				e.name.toLowerCase().includes(term) ||
 				e.muscleGroup.toLowerCase().includes(term),
 		);

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { DAYS_OF_WEEK } from "@/lib/constants";
 
 function countTrainingDays(schedule: Record<string, string | null>) {
@@ -77,7 +77,7 @@ export function ProgramsList() {
 
 	return (
 		<div className="space-y-3">
-			{programs.map((program) => {
+			{programs.map((program: Doc<"programs">) => {
 				const days = countTrainingDays(program.schedule);
 				return (
 					<Card
