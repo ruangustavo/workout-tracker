@@ -2,6 +2,7 @@
 
 import { useMutation } from "convex/react";
 import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,15 +25,10 @@ interface ProgramFormProps {
 	editId?: Id<"programs">;
 	editName?: string;
 	trigger?: React.ReactNode;
-	onSuccess?: (id: Id<"programs">) => void;
 }
 
-export function ProgramForm({
-	editId,
-	editName,
-	trigger,
-	onSuccess,
-}: ProgramFormProps) {
+export function ProgramForm({ editId, editName, trigger }: ProgramFormProps) {
+	const router = useRouter();
 	const [open, setOpen] = useState(false);
 	const [name, setName] = useState(editName ?? "");
 	const create = useMutation(api.programs.create);
@@ -49,7 +45,7 @@ export function ProgramForm({
 			} else {
 				const id = await create({ name: name.trim() });
 				toast.success("Programa criado");
-				onSuccess?.(id);
+				router.push(`/programas/${id}`);
 			}
 			setName("");
 			setOpen(false);
