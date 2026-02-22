@@ -3,14 +3,12 @@ import type { Id } from "./_generated/dataModel";
 import { internalMutation } from "./_generated/server";
 
 const PRESET_EXERCISES: { name: string; muscleGroup: string }[] = [
-	// Peito
 	{ name: "Supino Reto", muscleGroup: "Peito" },
 	{ name: "Supino Inclinado", muscleGroup: "Peito" },
 	{ name: "Supino Declinado", muscleGroup: "Peito" },
 	{ name: "Crucifixo", muscleGroup: "Peito" },
 	{ name: "Crossover", muscleGroup: "Peito" },
 	{ name: "Flexão de Braço", muscleGroup: "Peito" },
-	// Costas
 	{ name: "Puxada Frontal", muscleGroup: "Costas" },
 	{ name: "Puxada Aberta", muscleGroup: "Costas" },
 	{ name: "Remada Curvada", muscleGroup: "Costas" },
@@ -20,47 +18,39 @@ const PRESET_EXERCISES: { name: string; muscleGroup: string }[] = [
 	{ name: "Pullover", muscleGroup: "Costas" },
 	{ name: "Remada Baixa", muscleGroup: "Costas" },
 	{ name: "Barra Fixa", muscleGroup: "Costas" },
-	// Ombros
 	{ name: "Desenvolvimento Militar", muscleGroup: "Ombros" },
 	{ name: "Elevação Lateral", muscleGroup: "Ombros" },
 	{ name: "Elevação Lateral Inclinada", muscleGroup: "Ombros" },
 	{ name: "Elevação Frontal", muscleGroup: "Ombros" },
 	{ name: "Crucifixo Inverso", muscleGroup: "Ombros" },
 	{ name: "Encolhimento", muscleGroup: "Ombros" },
-	// Bíceps
 	{ name: "Rosca Direta", muscleGroup: "Bíceps" },
 	{ name: "Rosca Alternada", muscleGroup: "Bíceps" },
 	{ name: "Rosca Martelo", muscleGroup: "Bíceps" },
 	{ name: "Rosca Concentrada", muscleGroup: "Bíceps" },
 	{ name: "Rosca Scott", muscleGroup: "Bíceps" },
-	// Tríceps
 	{ name: "Tríceps Pulley", muscleGroup: "Tríceps" },
 	{ name: "Tríceps Testa", muscleGroup: "Tríceps" },
 	{ name: "Tríceps Francês", muscleGroup: "Tríceps" },
 	{ name: "Extensão de Tríceps Overhead", muscleGroup: "Tríceps" },
 	{ name: "Mergulho", muscleGroup: "Tríceps" },
 	{ name: "Tríceps Corda", muscleGroup: "Tríceps" },
-	// Quadríceps
 	{ name: "Agachamento Livre", muscleGroup: "Quadríceps" },
 	{ name: "Leg Press", muscleGroup: "Quadríceps" },
 	{ name: "Cadeira Extensora", muscleGroup: "Quadríceps" },
 	{ name: "Agachamento Búlgaro", muscleGroup: "Quadríceps" },
 	{ name: "Hack Squat", muscleGroup: "Quadríceps" },
 	{ name: "Avanço", muscleGroup: "Quadríceps" },
-	// Posterior
 	{ name: "Stiff", muscleGroup: "Posterior" },
 	{ name: "Levantamento Terra", muscleGroup: "Posterior" },
 	{ name: "Mesa Flexora", muscleGroup: "Posterior" },
 	{ name: "Cadeira Flexora", muscleGroup: "Posterior" },
 	{ name: "Levantamento Terra Romeno", muscleGroup: "Posterior" },
-	// Glúteos
 	{ name: "Hip Thrust", muscleGroup: "Glúteos" },
 	{ name: "Elevação Pélvica", muscleGroup: "Glúteos" },
 	{ name: "Abdução de Quadril", muscleGroup: "Glúteos" },
-	// Panturrilha
 	{ name: "Panturrilha em Pé", muscleGroup: "Panturrilha" },
 	{ name: "Panturrilha Sentado", muscleGroup: "Panturrilha" },
-	// Abdômen
 	{ name: "Abdominal Crunch", muscleGroup: "Abdômen" },
 	{ name: "Prancha", muscleGroup: "Abdômen" },
 	{ name: "Elevação de Pernas", muscleGroup: "Abdômen" },
@@ -238,7 +228,6 @@ export const run = internalMutation({
 			],
 		});
 
-		// === Upper B ===
 		const upperBId = await ctx.db.insert("workouts", {
 			name: "Upper B",
 			program: programId,

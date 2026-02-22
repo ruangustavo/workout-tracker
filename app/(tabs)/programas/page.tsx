@@ -1,17 +1,29 @@
 "use client";
 
+import { useMutation, useQuery } from "convex/react";
+import { ChevronRight, ClipboardList, Zap, ZapOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
-import { Card, CardHeader, CardTitle, CardDescription, CardAction } from "@/components/ui/card";
+import { ProgramForm } from "@/components/program-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardAction,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
-import { ProgramForm } from "@/components/program-form";
-import { ClipboardList, ChevronRight, Zap, ZapOff } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { DAYS_OF_WEEK } from "@/lib/constants";
 
 export default function ProgramasPage() {
@@ -41,12 +53,8 @@ export default function ProgramasPage() {
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="flex items-center justify-between">
-				<h1 className="text-lg font-semibold tracking-tight">
-					Programas
-				</h1>
-				<ProgramForm
-					onSuccess={(id) => router.push(`/programas/${id}`)}
-				/>
+				<h1 className="text-lg font-semibold tracking-tight">Programas</h1>
+				<ProgramForm onSuccess={(id) => router.push(`/programas/${id}`)} />
 			</div>
 
 			{!programs ? (
@@ -75,20 +83,13 @@ export default function ProgramasPage() {
 							<Card
 								key={program._id}
 								className="cursor-pointer transition-colors hover:bg-muted/30"
-								onClick={() =>
-									router.push(`/programas/${program._id}`)
-								}
+								onClick={() => router.push(`/programas/${program._id}`)}
 							>
 								<CardHeader>
 									<div className="flex items-center gap-2">
-										<CardTitle className="text-sm">
-											{program.name}
-										</CardTitle>
+										<CardTitle className="text-sm">{program.name}</CardTitle>
 										{program.active && (
-											<Badge
-												variant="default"
-												className="text-[10px]"
-											>
+											<Badge variant="default" className="text-[10px]">
 												Ativo
 											</Badge>
 										)}
@@ -105,16 +106,9 @@ export default function ProgramasPage() {
 												size="icon-sm"
 												onClick={(e) => {
 													e.stopPropagation();
-													handleToggleActive(
-														program._id,
-														program.active,
-													);
+													handleToggleActive(program._id, program.active);
 												}}
-												title={
-													program.active
-														? "Desativar"
-														: "Ativar"
-												}
+												title={program.active ? "Desativar" : "Ativar"}
 											>
 												{program.active ? (
 													<ZapOff className="size-3.5" />

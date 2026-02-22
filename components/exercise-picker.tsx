@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { Plus, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
 	Drawer,
+	DrawerClose,
 	DrawerContent,
+	DrawerDescription,
 	DrawerHeader,
 	DrawerTitle,
-	DrawerDescription,
-	DrawerClose,
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Plus } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 interface ExercisePickerProps {
 	open: boolean;
@@ -103,10 +103,8 @@ export function ExercisePicker({
 										<button
 											key={exercise._id}
 											type="button"
-											onClick={() =>
-												handleSelect(exercise._id, exercise.name)
-											}
-											className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted/50"
+											onClick={() => handleSelect(exercise._id, exercise.name)}
+											className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-muted/50"
 										>
 											<Plus className="size-3.5 text-muted-foreground" />
 											{exercise.name}

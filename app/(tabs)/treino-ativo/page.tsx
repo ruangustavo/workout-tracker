@@ -1,40 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import {
+	Check,
+	CheckCircle,
+	ChevronLeft,
+	ChevronRight,
+	Clock,
+	Dumbbell,
+	ListOrdered,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { SessionExerciseView } from "@/components/session-exercise-view";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Empty,
+	EmptyDescription,
 	EmptyHeader,
 	EmptyMedia,
 	EmptyTitle,
-	EmptyDescription,
 } from "@/components/ui/empty";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
 	Sheet,
 	SheetContent,
 	SheetHeader,
 	SheetTitle,
 } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
-import {
-	Dumbbell,
-	CheckCircle,
-	ChevronLeft,
-	ChevronRight,
-	ArrowUp,
-	ArrowDown,
-	ListOrdered,
-	Check,
-	SkipForward,
-	Clock,
-} from "lucide-react";
 
 export default function TreinoAtivoPage() {
 	const router = useRouter();
@@ -44,14 +53,12 @@ export default function TreinoAtivoPage() {
 		session ? { session: session._id } : "skip",
 	);
 	const completeSession = useMutation(api.sessions.complete);
-	const reorderLog = useMutation(api.exerciseLogs.reorder);
 
 	const [currentLogId, setCurrentLogId] = useState<Id<"exerciseLogs"> | null>(
 		null,
 	);
 	const [listOpen, setListOpen] = useState(false);
 
-	// Initialize to first pending exercise when logs load
 	useEffect(() => {
 		if (logs && logs.length > 0 && currentLogId === null) {
 			const firstPending = logs.find((l) => l.status === "pending");
@@ -121,28 +128,14 @@ export default function TreinoAtivoPage() {
 
 	const handleFinish = async () => {
 		await completeSession({ id: session._id });
+		toast.success("Treino concluído!", {
+			description: session.workout.name,
+		});
 		router.push("/inicio");
 	};
 
-	const handleMoveUp = async (index: number) => {
-		if (index === 0) return;
-		const curr = logs[index];
-		const above = logs[index - 1];
-		await reorderLog({ id: curr._id, order: above.order });
-		await reorderLog({ id: above._id, order: curr.order });
-	};
-
-	const handleMoveDown = async (index: number) => {
-		if (index === logs.length - 1) return;
-		const curr = logs[index];
-		const below = logs[index + 1];
-		await reorderLog({ id: curr._id, order: below.order });
-		await reorderLog({ id: below._id, order: curr.order });
-	};
-
 	return (
-		<div className="flex flex-col gap-4">
-			{/* Header */}
+		<div className="flex flex-col gap-4 pb-16">
 			<div className="flex items-center justify-between">
 				<div>
 					<h1 className="text-lg font-semibold tracking-tight">
@@ -161,14 +154,30 @@ export default function TreinoAtivoPage() {
 					>
 						<ListOrdered className="size-4" />
 					</Button>
-					<Button variant="outline" size="sm" onClick={handleFinish}>
-						<CheckCircle className="size-4" />
-						Finalizar
-					</Button>
+					<AlertDialog>
+						<AlertDialogTrigger asChild>
+							<Button variant="outline" size="sm">
+								<CheckCircle className="size-4" />
+								Finalizar
+							</Button>
+						</AlertDialogTrigger>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>Finalizar treino?</AlertDialogTitle>
+								<AlertDialogDescription>
+									O progresso será salvo e o treino encerrado.
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>Cancelar</AlertDialogCancel>
+								<AlertDialogAction onClick={handleFinish}>
+									Finalizar
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
 				</div>
 			</div>
-
-			{/* Current exercise */}
 			{allDone ? (
 				<Empty className="flex-1 py-12">
 					<EmptyHeader>
@@ -176,18 +185,14 @@ export default function TreinoAtivoPage() {
 							<CheckCircle />
 						</EmptyMedia>
 						<EmptyTitle>Todos exercícios concluídos!</EmptyTitle>
-						<EmptyDescription>
-							Finalize o treino para salvar.
-						</EmptyDescription>
+						<EmptyDescription>Finalize o treino para salvar.</EmptyDescription>
 					</EmptyHeader>
 				</Empty>
 			) : currentLog ? (
 				<SessionExerciseView
 					key={currentLog._id}
 					logId={currentLog._id}
-					exerciseName={
-						currentLog.exerciseDetails?.name ?? "Exercício"
-					}
+					exerciseName={currentLog.exerciseDetails?.name ?? "Exercício"}
 					config={
 						workoutExercises.find(
 							(e) => e.exercise === currentLog.exercise,
@@ -201,109 +206,74 @@ export default function TreinoAtivoPage() {
 						}
 					}
 					existingSets={
-						currentLog.status !== "pending"
-							? currentLog.sets
-							: undefined
+						currentLog.status !== "pending" ? currentLog.sets : undefined
 					}
 					isCompleted={currentLog.status === "completed"}
 					onCompleted={handleExerciseCompleted}
 				/>
 			) : null}
-
-			{/* Prev / Next navigation */}
 			{logs.length > 1 && (
-				<div className="flex items-center gap-2">
-					<Button
-						variant="outline"
-						className="flex-1"
-						onClick={handlePrev}
-						disabled={currentIndex <= 0}
-					>
-						<ChevronLeft className="size-4" />
-						Anterior
-					</Button>
-					<span className="text-xs text-muted-foreground tabular-nums">
-						{currentIndex + 1}/{logs.length}
-					</span>
-					<Button
-						variant="outline"
-						className="flex-1"
-						onClick={handleNext}
-						disabled={currentIndex >= logs.length - 1}
-					>
-						Próximo
-						<ChevronRight className="size-4" />
-					</Button>
+				<div className="fixed inset-x-0 bottom-16 z-30 bg-background/95 px-4 py-2 backdrop-blur-sm supports-backdrop-filter:bg-background/80">
+					<div className="mx-auto flex max-w-md items-center gap-2">
+						<Button
+							variant="outline"
+							className="flex-1"
+							onClick={handlePrev}
+							disabled={currentIndex <= 0}
+						>
+							<ChevronLeft />
+							Anterior
+						</Button>
+						<span className="text-xs text-muted-foreground tabular-nums">
+							{currentIndex + 1}/{logs.length}
+						</span>
+						<Button
+							variant="outline"
+							className="flex-1"
+							onClick={handleNext}
+							disabled={currentIndex >= logs.length - 1}
+						>
+							Próximo
+							<ChevronRight />
+						</Button>
+					</div>
 				</div>
 			)}
-
-			{/* Exercise list + reorder sheet */}
 			<Sheet open={listOpen} onOpenChange={setListOpen}>
 				<SheetContent side="bottom">
 					<SheetHeader>
 						<SheetTitle>Exercícios</SheetTitle>
 					</SheetHeader>
 					<div className="space-y-1 overflow-y-auto px-4 pb-6">
-						{logs.map((log, index) => (
-							<div
+						{logs.map((log) => (
+							<button
 								key={log._id}
-								className="flex items-center gap-1"
+								type="button"
+								onClick={() => {
+									setCurrentLogId(log._id);
+									setListOpen(false);
+								}}
+								className={cn(
+									"flex w-full items-center gap-2 px-2 py-2 text-left text-sm hover:bg-muted/50",
+									log._id === currentLogId && "bg-muted font-medium",
+								)}
 							>
-								<button
-									type="button"
-									onClick={() => {
-										setCurrentLogId(log._id);
-										setListOpen(false);
-									}}
-									className={cn(
-										"flex flex-1 items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted/50",
-										log._id === currentLogId &&
-											"bg-muted font-medium",
+								<span className="size-4 shrink-0">
+									{log.status === "completed" ? (
+										<Check className="size-4 text-green-500" />
+									) : (
+										<Clock className="size-4 text-muted-foreground" />
 									)}
-								>
-									<span className="size-4 shrink-0">
-										{log.status === "completed" ? (
-											<Check className="size-4 text-green-500" />
-										) : log.status === "skipped" ? (
-											<SkipForward className="size-4 text-muted-foreground" />
-										) : (
-											<Clock className="size-4 text-muted-foreground" />
-										)}
-									</span>
-									<span className="flex-1 truncate">
-										{log.exerciseDetails?.name ??
-											"Exercício"}
-									</span>
-									{log.status !== "pending" && (
-										<Badge
-											variant="secondary"
-											className="text-[10px]"
-										>
-											{log.status === "completed"
-												? "Feito"
-												: "Pulado"}
-										</Badge>
-									)}
-								</button>
-								<div className="flex flex-col">
-									<Button
-										variant="ghost"
-										size="icon-xs"
-										disabled={index === 0}
-										onClick={() => handleMoveUp(index)}
-									>
-										<ArrowUp className="size-3" />
-									</Button>
-									<Button
-										variant="ghost"
-										size="icon-xs"
-										disabled={index === logs.length - 1}
-										onClick={() => handleMoveDown(index)}
-									>
-										<ArrowDown className="size-3" />
-									</Button>
-								</div>
-							</div>
+								</span>
+								<span className="flex-1 truncate">
+									{log.exerciseDetails?.name ?? "Exercício"}
+								</span>
+								{log.status === "completed" && (
+									<Badge variant="secondary" className="text-[10px]">
+										Feito
+									</Badge>
+								)}
+							</button>
 						))}
 					</div>
 				</SheetContent>

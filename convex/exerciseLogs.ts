@@ -56,19 +56,6 @@ export const skip = mutation({
 	},
 });
 
-export const reorder = mutation({
-	args: {
-		id: v.id("exerciseLogs"),
-		order: v.number(),
-	},
-	handler: async (ctx, args) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) throw new Error("Não autenticado");
-
-		await ctx.db.patch(args.id, { order: args.order });
-	},
-});
-
 export const getHistory = query({
 	args: { exercise: v.id("exercises") },
 	handler: async (ctx, args) => {

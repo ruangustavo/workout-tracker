@@ -91,6 +91,23 @@ export const getActive = query({
 	},
 });
 
+export const listByRange = query({
+	args: { from: v.number(), to: v.number() },
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) return [];
+
+		const sessions = await ctx.db
+			.query("sessions")
+			.withIndex("by_started_at", (q) =>
+				q.gte("startedAt", args.from).lt("startedAt", args.to),
+			)
+			.collect();
+
+		return sessions.filter((s) => s.status === "completed" && s.userId === userId);
+	},
+});
+
 export const listByMonth = query({
 	args: { year: v.number(), month: v.number() },
 	handler: async (ctx, args) => {

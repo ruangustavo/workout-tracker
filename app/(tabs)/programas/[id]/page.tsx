@@ -1,37 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { ArrowLeft, Pencil, Plus, Trash2, Zap, ZapOff } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { ProgramForm } from "@/components/program-form";
+import { ScheduleEditor } from "@/components/schedule-editor";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardDescription, CardAction } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardAction,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
-	DialogHeader,
-	DialogTitle,
 	DialogDescription,
 	DialogFooter,
+	DialogHeader,
+	DialogTitle,
 } from "@/components/ui/dialog";
-import { ScheduleEditor } from "@/components/schedule-editor";
-import { WorkoutForm } from "@/components/workout-form";
-import { ProgramForm } from "@/components/program-form";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { WorkoutExerciseData } from "@/components/workout-exercise-form";
-import {
-	ArrowLeft,
-	Plus,
-	Pencil,
-	Trash2,
-	Zap,
-	ZapOff,
-	ChevronRight,
-} from "lucide-react";
+import { WorkoutForm } from "@/components/workout-form";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 export default function ProgramDetailPage() {
 	const params = useParams();
@@ -85,7 +82,7 @@ export default function ProgramDetailPage() {
 
 	async function handleToggleActive() {
 		try {
-			if (program!.active) {
+			if (program?.active) {
 				await deactivate({ id: programId });
 				toast.success("Programa desativado");
 			} else {
@@ -119,17 +116,15 @@ export default function ProgramDetailPage() {
 	}
 
 	function handleEditWorkout(workout: NonNullable<typeof workouts>[number]) {
-		const exerciseData: WorkoutExerciseData[] = workout.exercises.map(
-			(e) => ({
-				exerciseId: e.exercise,
-				exerciseName: e.exerciseName,
-				sets: e.sets,
-				repsMin: e.repsMin,
-				repsMax: e.repsMax,
-				restMin: e.restMin,
-				restMax: e.restMax,
-			}),
-		);
+		const exerciseData: WorkoutExerciseData[] = workout.exercises.map((e) => ({
+			exerciseId: e.exercise,
+			exerciseName: e.exerciseName,
+			sets: e.sets,
+			repsMin: e.repsMin,
+			repsMax: e.repsMax,
+			restMin: e.restMin,
+			restMax: e.restMax,
+		}));
 		setEditingWorkout({
 			id: workout._id,
 			name: workout.name,
@@ -139,7 +134,6 @@ export default function ProgramDetailPage() {
 
 	return (
 		<div className="flex flex-col gap-6">
-			{/* Header */}
 			<div className="flex items-start gap-3">
 				<Button
 					variant="ghost"
@@ -197,17 +191,11 @@ export default function ProgramDetailPage() {
 					</Button>
 				</div>
 			</div>
-
-			{/* Schedule */}
 			<ScheduleEditor
 				programId={programId}
 				schedule={program.schedule}
 				workouts={workouts}
 			/>
-
-			<Separator />
-
-			{/* Workouts */}
 			<div className="space-y-3">
 				<div className="flex items-center justify-between">
 					<h2 className="font-mono text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
@@ -222,11 +210,9 @@ export default function ProgramDetailPage() {
 						Novo treino
 					</Button>
 				</div>
-
 				{workouts.length === 0 ? (
 					<p className="py-4 text-center text-xs text-muted-foreground">
-						Nenhum treino criado. Adicione treinos para configurar o
-						cronograma.
+						Nenhum treino criado. Adicione treinos para configurar o cronograma.
 					</p>
 				) : (
 					<div className="space-y-2">
@@ -236,18 +222,14 @@ export default function ProgramDetailPage() {
 									<CardTitle>{workout.name}</CardTitle>
 									<CardDescription>
 										{workout.exercises.length} exercício
-										{workout.exercises.length !== 1
-											? "s"
-											: ""}
+										{workout.exercises.length !== 1 ? "s" : ""}
 									</CardDescription>
 									<CardAction>
 										<div className="flex items-center gap-1">
 											<Button
 												variant="ghost"
 												size="icon-xs"
-												onClick={() =>
-													handleEditWorkout(workout)
-												}
+												onClick={() => handleEditWorkout(workout)}
 											>
 												<Pencil className="size-3" />
 											</Button>
@@ -273,14 +255,12 @@ export default function ProgramDetailPage() {
 				)}
 			</div>
 
-			{/* Workout Form - Create */}
 			<WorkoutForm
 				programId={programId}
 				open={workoutFormOpen}
 				onOpenChange={setWorkoutFormOpen}
 			/>
 
-			{/* Workout Form - Edit */}
 			{editingWorkout && (
 				<WorkoutForm
 					programId={programId}
@@ -294,7 +274,6 @@ export default function ProgramDetailPage() {
 				/>
 			)}
 
-			{/* Delete confirmation */}
 			<Dialog
 				open={deleteConfirm !== null}
 				onOpenChange={(open) => {
@@ -312,10 +291,7 @@ export default function ProgramDetailPage() {
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setDeleteConfirm(null)}
-						>
+						<Button variant="outline" onClick={() => setDeleteConfirm(null)}>
 							Cancelar
 						</Button>
 						<Button variant="destructive" onClick={handleDelete}>

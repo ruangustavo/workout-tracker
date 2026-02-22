@@ -1,14 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
+import { format, isSameMonth, startOfDay, subDays } from "date-fns";
+import { CalendarOff, Flame, Play, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ptBR } from "date-fns/locale";
-import { format } from "date-fns";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { useMemo, useState } from "react";
+import { ActivityHeatmap, heatmapRange } from "@/components/activity-heatmap";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
 	Card,
 	CardContent,
@@ -30,7 +28,8 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarOff, Play } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { DAY_LABELS, DAYS_OF_WEEK, type DayOfWeek } from "@/lib/constants";
 
 function getTodayDayOfWeek(): DayOfWeek {
@@ -40,39 +39,63 @@ function getTodayDayOfWeek(): DayOfWeek {
 
 export default function InicioPage() {
 	const router = useRouter();
-	const [month, setMonth] = useState(() => new Date());
 	const [pickerOpen, setPickerOpen] = useState(false);
+
+	// Stable date range computed once on mount
+	const { rangeFrom, rangeTo } = useMemo(() => {
+		const { from, to } = heatmapRange();
+		return { rangeFrom: from, rangeTo: to };
+	}, []);
 
 	const activeProgram = useQuery(api.programs.getActive);
 	const activeSession = useQuery(api.sessions.getActive);
-	const sessions = useQuery(api.sessions.listByMonth, {
-		year: month.getFullYear(),
-		month: month.getMonth(),
+	const rangeSessions = useQuery(api.sessions.listByRange, {
+		from: rangeFrom,
+		to: rangeTo,
 	});
 	const startSession = useMutation(api.sessions.start);
-
-	const trainedDates = useMemo(() => {
-		if (!sessions) return [];
-		return sessions.map((s) => new Date(s.startedAt));
-	}, [sessions]);
 
 	const todayWorkout = useMemo(() => {
 		if (!activeProgram) return null;
 		const day = getTodayDayOfWeek();
 		const workoutId = activeProgram.schedule[day];
 		if (!workoutId) return null;
-		const workout = activeProgram.workouts.find(
-			(w) => w._id === workoutId,
-		);
-		return workout
-			? { ...workout, dayLabel: DAY_LABELS[day] }
-			: null;
+		const workout = activeProgram.workouts.find((w) => w._id === workoutId);
+		return workout ? { ...workout, dayLabel: DAY_LABELS[day] } : null;
 	}, [activeProgram]);
 
 	const hasOtherWorkouts =
 		activeProgram !== null &&
 		activeProgram !== undefined &&
 		activeProgram.workouts.length > (todayWorkout ? 1 : 0);
+
+	const { streak, monthSessions } = useMemo(() => {
+		const today = startOfDay(new Date());
+		const sessions = rangeSessions ?? [];
+
+		const trained = new Set(
+			sessions.map((s) => format(startOfDay(new Date(s.startedAt)), "yyyy-MM-dd")),
+		);
+
+		// Current streak: consecutive days ending today (or yesterday if today untrained)
+		let cursor = today;
+		if (!trained.has(format(cursor, "yyyy-MM-dd"))) {
+			cursor = subDays(cursor, 1);
+		}
+		let currentStreak = 0;
+		let temp = cursor;
+		while (trained.has(format(temp, "yyyy-MM-dd"))) {
+			currentStreak++;
+			temp = subDays(temp, 1);
+		}
+
+		// Sessions in the current calendar month
+		const monthCount = sessions.filter((s) =>
+			isSameMonth(new Date(s.startedAt), today),
+		).length;
+
+		return { streak: currentStreak, monthSessions: monthCount };
+	}, [rangeSessions]);
 
 	const handleStart = async (workoutId: Id<"workouts">) => {
 		setPickerOpen(false);
@@ -88,7 +111,8 @@ export default function InicioPage() {
 		return (
 			<div className="space-y-4">
 				<Skeleton className="h-8 w-32" />
-				<Skeleton className="mx-auto h-72 w-full" />
+				<Skeleton className="h-16 w-full" />
+				<Skeleton className="h-28 w-full" />
 				<Skeleton className="h-24 w-full" />
 			</div>
 		);
@@ -98,36 +122,43 @@ export default function InicioPage() {
 		<div className="flex flex-col gap-6">
 			<h1 className="text-lg font-semibold tracking-tight">Início</h1>
 
-			<div className="flex justify-center">
-				<Calendar
-					mode="multiple"
-					selected={trainedDates}
-					locale={ptBR}
-					month={month}
-					onMonthChange={setMonth}
-					classNames={{
-						day: "relative w-full h-full p-0 text-center group/day aspect-square select-none",
-					}}
-					modifiers={{ trained: trainedDates }}
-					modifiersClassNames={{
-						trained:
-							"after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:size-1 after:rounded-full after:bg-primary",
-					}}
-				/>
+			{/* Metrics */}
+			<div className="grid grid-cols-2 gap-3">
+				<Card>
+					<CardContent className="flex items-center gap-3 pt-4 pb-4">
+						<Flame className="size-8 shrink-0 text-orange-500" />
+						<div>
+							<p className="text-2xl font-bold leading-none">{streak}</p>
+							<p className="mt-1 text-xs text-muted-foreground">
+								{streak === 1 ? "dia seguido" : "dias seguidos"}
+							</p>
+						</div>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardContent className="flex items-center gap-3 pt-4 pb-4">
+						<Trophy className="size-8 shrink-0 text-yellow-500" />
+						<div>
+							<p className="text-2xl font-bold leading-none">{monthSessions}</p>
+							<p className="mt-1 text-xs text-muted-foreground">
+								{monthSessions === 1 ? "treino este mês" : "treinos este mês"}
+							</p>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
 
+			{/* Heatmap */}
+			<ActivityHeatmap sessions={rangeSessions ?? []} />
+
+			{/* Today's workout card */}
 			{activeSession ? (
 				<Card>
 					<CardHeader>
-						<CardTitle>
-							{activeSession.workout?.name ?? "Treino"}
-						</CardTitle>
+						<CardTitle>{activeSession.workout?.name ?? "Treino"}</CardTitle>
 						<CardDescription>
 							Em andamento desde{" "}
-							{format(
-								new Date(activeSession.startedAt),
-								"HH:mm",
-							)}
+							{format(new Date(activeSession.startedAt), "HH:mm")}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -141,9 +172,7 @@ export default function InicioPage() {
 				<Card>
 					<CardHeader>
 						<CardTitle>{todayWorkout.name}</CardTitle>
-						<CardDescription>
-							Treino de {todayWorkout.dayLabel}
-						</CardDescription>
+						<CardDescription>Treino de {todayWorkout.dayLabel}</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-2">
 						<Button

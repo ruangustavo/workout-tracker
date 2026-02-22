@@ -26,20 +26,22 @@ export function calculateSuggestion(
 	if (allAboveMax) {
 		const increment = currentWeight * 0.05;
 		const suggested = roundToNearest2(currentWeight + increment);
+		const maxReps = Math.max(...sets.map((s) => s.reps));
 		return {
 			type: "increase",
 			weight: suggested,
-			message: `Você completou todas as séries acima da faixa! Considere aumentar para ${suggested}kg na próxima sessão.`,
+			message: `Na última sessão você fez ${maxReps} reps (máx. ${repsMax}). Considere aumentar para ${suggested}kg.`,
 		};
 	}
 
 	if (allBelowMin) {
 		const decrement = currentWeight * 0.025;
 		const suggested = roundToNearest2(currentWeight - decrement);
+		const minReps = Math.min(...sets.map((s) => s.reps));
 		return {
 			type: "decrease",
 			weight: suggested,
-			message: `Você ficou abaixo da faixa em todas as séries. Considere diminuir para ${suggested}kg na próxima sessão.`,
+			message: `Na última sessão você fez apenas ${minReps} reps (mín. ${repsMin}). Considere diminuir para ${suggested}kg.`,
 		};
 	}
 

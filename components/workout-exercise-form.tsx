@@ -1,9 +1,9 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
 
 export interface WorkoutExerciseData {
 	exerciseId: string;
@@ -28,12 +28,12 @@ export function WorkoutExerciseForm({
 }: WorkoutExerciseFormProps) {
 	function handleChange(field: keyof WorkoutExerciseData, value: string) {
 		const num = parseInt(value, 10);
-		if (isNaN(num) || num < 0) return;
+		if (Number.isNaN(num) || num < 0) return;
 		onChange({ ...data, [field]: num });
 	}
 
 	return (
-		<div className="space-y-3 rounded-lg border border-border/50 p-3">
+		<div className="space-y-3 border border-border/50 p-3">
 			<div className="flex items-center justify-between">
 				<span className="text-sm font-medium">{data.exerciseName}</span>
 				<Button
@@ -47,9 +47,7 @@ export function WorkoutExerciseForm({
 			</div>
 			<div className="grid grid-cols-3 gap-2">
 				<div className="space-y-1">
-					<Label className="text-[10px] text-muted-foreground">
-						Séries
-					</Label>
+					<Label className="text-[10px] text-muted-foreground">Séries</Label>
 					<Input
 						type="number"
 						min={1}
@@ -58,29 +56,21 @@ export function WorkoutExerciseForm({
 					/>
 				</div>
 				<div className="space-y-1">
-					<Label className="text-[10px] text-muted-foreground">
-						Reps mín
-					</Label>
+					<Label className="text-[10px] text-muted-foreground">Reps mín</Label>
 					<Input
 						type="number"
 						min={1}
 						value={data.repsMin}
-						onChange={(e) =>
-							handleChange("repsMin", e.target.value)
-						}
+						onChange={(e) => handleChange("repsMin", e.target.value)}
 					/>
 				</div>
 				<div className="space-y-1">
-					<Label className="text-[10px] text-muted-foreground">
-						Reps máx
-					</Label>
+					<Label className="text-[10px] text-muted-foreground">Reps máx</Label>
 					<Input
 						type="number"
 						min={1}
 						value={data.repsMax}
-						onChange={(e) =>
-							handleChange("repsMax", e.target.value)
-						}
+						onChange={(e) => handleChange("repsMax", e.target.value)}
 					/>
 				</div>
 			</div>
@@ -94,9 +84,7 @@ export function WorkoutExerciseForm({
 						min={0}
 						step={15}
 						value={data.restMin}
-						onChange={(e) =>
-							handleChange("restMin", e.target.value)
-						}
+						onChange={(e) => handleChange("restMin", e.target.value)}
 					/>
 				</div>
 				<div className="space-y-1">
@@ -108,9 +96,7 @@ export function WorkoutExerciseForm({
 						min={0}
 						step={15}
 						value={data.restMax}
-						onChange={(e) =>
-							handleChange("restMax", e.target.value)
-						}
+						onChange={(e) => handleChange("restMax", e.target.value)}
 					/>
 				</div>
 			</div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { cn } from "@/lib/utils";
@@ -34,11 +35,20 @@ export default function RootLayout({
 	return (
 		<ConvexAuthNextjsServerProvider>
 			<html lang="pt-BR" className={cn(jetbrainsMono.variable, "dark")}>
+				<head>
+					{process.env.NODE_ENV === "development" && (
+						<Script
+							src="//unpkg.com/react-grab/dist/index.global.js"
+							crossOrigin="anonymous"
+							strategy="beforeInteractive"
+						/>
+					)}
+				</head>
 				<body
 					className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 				>
 					<ConvexClientProvider>{children}</ConvexClientProvider>
-					<Toaster />
+					<Toaster richColors />
 				</body>
 			</html>
 		</ConvexAuthNextjsServerProvider>
