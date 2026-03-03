@@ -127,6 +127,43 @@ export const getProgressData = query({
 	},
 });
 
+export const replaceExercise = mutation({
+	args: {
+		id: v.id("exerciseLogs"),
+		newExercise: v.id("exercises"),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Não autenticado");
+
+		const log = await ctx.db.get(args.id);
+		if (!log) throw new Error("Log não encontrado");
+		if (log.status !== "pending") throw new Error("Exercício já iniciado");
+
+		// Resolve the original config from the workout template (if not already overridden)
+		const session = await ctx.db.get(log.session);
+		const workout = session ? await ctx.db.get(session.workout) : null;
+		const originalEntry = workout?.exercises.find(
+			(e) => e.exercise === log.exercise,
+		);
+
+		const targetSets = log.targetSets ?? originalEntry?.sets;
+		const repsMin = log.repsMin ?? originalEntry?.repsMin;
+		const repsMax = log.repsMax ?? originalEntry?.repsMax;
+		const restMin = log.restMin ?? originalEntry?.restMin;
+		const restMax = log.restMax ?? originalEntry?.restMax;
+
+		await ctx.db.patch(args.id, {
+			exercise: args.newExercise,
+			targetSets,
+			repsMin,
+			repsMax,
+			restMin,
+			restMax,
+		});
+	},
+});
+
 export const getPreviousWeight = query({
 	args: { exercise: v.id("exercises") },
 	handler: async (ctx, args) => {

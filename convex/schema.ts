@@ -68,6 +68,12 @@ export default defineSchema({
 				reps: v.number(),
 			}),
 		),
+		// Populated on exercise swap; takes precedence over workout template config
+		targetSets: v.optional(v.number()),
+		repsMin: v.optional(v.number()),
+		repsMax: v.optional(v.number()),
+		restMin: v.optional(v.number()),
+		restMax: v.optional(v.number()),
 	})
 		.index("by_session", ["session"])
 		.index("by_exercise", ["exercise"]),

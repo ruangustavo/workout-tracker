@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import {
+	ArrowLeftRight,
 	Check,
 	CheckCircle,
 	ChevronLeft,
@@ -13,16 +14,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ExercisePicker } from "@/components/exercise-picker";
 import { SessionExerciseView } from "@/components/session-exercise-view";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Empty,
-	EmptyDescription,
-	EmptyHeader,
-	EmptyMedia,
-	EmptyTitle,
-} from "@/components/ui/empty";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -34,6 +27,15 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import {
 	Sheet,
 	SheetContent,
@@ -45,7 +47,24 @@ import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 
-type LogWithDetails = Doc<"exerciseLogs"> & { exerciseDetails: Doc<"exercises"> | null };
+type LogWithDetails = Doc<"exerciseLogs"> & {
+	exerciseDetails: Doc<"exercises"> | null;
+};
+
+function resolveExerciseConfig(
+	log: LogWithDetails,
+	workoutExercises: Doc<"workouts">["exercises"],
+): Doc<"workouts">["exercises"][number] {
+	const template = workoutExercises.find((e) => e.exercise === log.exercise);
+	return {
+		exercise: log.exercise,
+		sets: log.targetSets ?? template?.sets ?? 3,
+		repsMin: log.repsMin ?? template?.repsMin ?? 8,
+		repsMax: log.repsMax ?? template?.repsMax ?? 12,
+		restMin: log.restMin ?? template?.restMin ?? 60,
+		restMax: log.restMax ?? template?.restMax ?? 90,
+	};
+}
 
 export function TreinoAtivoView() {
 	const router = useRouter();
@@ -60,10 +79,22 @@ export function TreinoAtivoView() {
 		null,
 	);
 	const [listOpen, setListOpen] = useState(false);
+	const [swapTargetLogId, setSwapTargetLogId] =
+		useState<Id<"exerciseLogs"> | null>(null);
+	const [swapPickerOpen, setSwapPickerOpen] = useState(false);
+	const [pendingSwap, setPendingSwap] = useState<{
+		logId: Id<"exerciseLogs">;
+		newExerciseId: Id<"exercises">;
+		newExerciseName: string;
+		oldExerciseName: string;
+	} | null>(null);
+	const replaceExercise = useMutation(api.exerciseLogs.replaceExercise);
 
 	useEffect(() => {
 		if (logs && logs.length > 0 && currentLogId === null) {
-			const firstPending = logs.find((l: LogWithDetails) => l.status === "pending");
+			const firstPending = logs.find(
+				(l: LogWithDetails) => l.status === "pending",
+			);
 			setCurrentLogId(firstPending?._id ?? logs[0]._id);
 		}
 	}, [logs, currentLogId]);
@@ -102,7 +133,9 @@ export function TreinoAtivoView() {
 		);
 	}
 
-	const currentIndex = logs.findIndex((l: LogWithDetails) => l._id === currentLogId);
+	const currentIndex = logs.findIndex(
+		(l: LogWithDetails) => l._id === currentLogId,
+	);
 	const currentLog = currentIndex >= 0 ? logs[currentIndex] : null;
 	const completedCount = logs.filter(
 		(l: LogWithDetails) => l.status === "completed" || l.status === "skipped",
@@ -189,28 +222,34 @@ export function TreinoAtivoView() {
 					</EmptyHeader>
 				</Empty>
 			) : currentLog ? (
-				<SessionExerciseView
-					key={currentLog._id}
-					logId={currentLog._id}
-					exerciseName={currentLog.exerciseDetails?.name ?? "Exercício"}
-					config={
-						workoutExercises.find(
-							(e: Doc<"workouts">["exercises"][number]) => e.exercise === currentLog.exercise,
-						) ?? {
-							exercise: currentLog.exercise,
-							sets: 3,
-							repsMin: 8,
-							repsMax: 12,
-							restMin: 60,
-							restMax: 90,
+				<div className="space-y-2">
+					{currentLog.status === "pending" && (
+						<div className="flex justify-end">
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => {
+									setSwapTargetLogId(currentLog._id);
+									setSwapPickerOpen(true);
+								}}
+							>
+								<ArrowLeftRight className="size-4" />
+								Trocar exercício
+							</Button>
+						</div>
+					)}
+					<SessionExerciseView
+						key={currentLog._id}
+						logId={currentLog._id}
+						exerciseName={currentLog.exerciseDetails?.name ?? "Exercício"}
+						config={resolveExerciseConfig(currentLog, workoutExercises)}
+						existingSets={
+							currentLog.status !== "pending" ? currentLog.sets : undefined
 						}
-					}
-					existingSets={
-						currentLog.status !== "pending" ? currentLog.sets : undefined
-					}
-					isCompleted={currentLog.status === "completed"}
-					onCompleted={handleExerciseCompleted}
-				/>
+						isCompleted={currentLog.status === "completed"}
+						onCompleted={handleExerciseCompleted}
+					/>
+				</div>
 			) : null}
 			{logs.length > 1 && (
 				<div className="fixed inset-x-0 bottom-16 z-30 bg-background/95 px-4 py-2 backdrop-blur-sm supports-backdrop-filter:bg-background/80">
@@ -278,6 +317,60 @@ export function TreinoAtivoView() {
 					</div>
 				</SheetContent>
 			</Sheet>
+			<ExercisePicker
+				open={swapPickerOpen}
+				onOpenChange={(open) => {
+					setSwapPickerOpen(open);
+					if (!open) setSwapTargetLogId(null);
+				}}
+				onSelect={(exerciseId, exerciseName) => {
+					if (!swapTargetLogId) return;
+					const oldExerciseName =
+						logs?.find((l: LogWithDetails) => l._id === swapTargetLogId)
+							?.exerciseDetails?.name ?? "Exercício";
+					setPendingSwap({
+						logId: swapTargetLogId,
+						newExerciseId: exerciseId,
+						newExerciseName: exerciseName,
+						oldExerciseName,
+					});
+					setSwapPickerOpen(false);
+					setSwapTargetLogId(null);
+				}}
+			/>
+			<AlertDialog
+				open={pendingSwap !== null}
+				onOpenChange={(open) => {
+					if (!open) setPendingSwap(null);
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Trocar exercício?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Substituir <strong>{pendingSwap?.oldExerciseName}</strong> por{" "}
+							<strong>{pendingSwap?.newExerciseName}</strong>?
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={() => setPendingSwap(null)}>
+							Cancelar
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={async () => {
+								if (!pendingSwap) return;
+								await replaceExercise({
+									id: pendingSwap.logId,
+									newExercise: pendingSwap.newExerciseId,
+								});
+								setPendingSwap(null);
+							}}
+						>
+							Confirmar
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }
